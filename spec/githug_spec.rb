@@ -27,6 +27,33 @@ describe "The Game" do
     Dir.chdir(@dir)
   end
 
+  it "allows the levels used to be configured" do
+    level_folder = "/tmp/rspec_level_config_check"
+    FileUtils.mkdir_p(level_folder)
+    config_file = File.new("#{level_folder}/config", "w")
+    3.times do |level_number|
+      level = "level#{level_number}"
+      level_filename = "#{level_folder}/#{level}.rb"
+      level_file = File.new(level_filename, "w")
+      level_file.puts(<<-EOF
+difficult 1
+description "Description of level #{level_number}"
+setup {}
+solution {puts("in solution of level#{level_number}"); true}
+      EOF
+      )
+      level_file.close
+      config_file.puts("#{level}")
+    end
+    config_file.close
+    `githug folder #{level_folder}`
+    3.times do |level_number|
+      `githug`.should match("in solution of level#{level_number}")
+    end
+    FileUtils.rm_rf(level_folder)
+    `githug folder #{@dir/levels}` # reset level folder now we know we can
+  end
+
   it "solves the init level" do
     `git init`
     `githug`.should be_solved
