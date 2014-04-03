@@ -14,11 +14,9 @@ end
 
 describe "The Game" do
 
-
   before(:all) do
     @dir = Dir.pwd
-    `rake build`
-    `gem install pkg/githug-#{Githug::VERSION}.gem`
+    `rake install`
     FileUtils.rm_rf("/tmp/git_hug")
     Dir.chdir("/tmp")
     `echo "y" | githug`
@@ -77,6 +75,7 @@ describe "The Game" do
   it "solves the status level" do
     `git ls-files --other --exclude-standard | githug`.should be_solved
   end
+
 
   it "solves the number of files committed level" do
     `git diff --name-only --cached | wc -l | githug`.should be_solved
