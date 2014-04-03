@@ -32,6 +32,7 @@ end
 
 solution do
   numberOfFilesThereWillBeCommit = request("How many changes are going to be committed?")
+  numberOfFilesThereWillBeCommit.strip!
 
   isInteger = !!(numberOfFilesThereWillBeCommit =~ /^[-+]?[0-9]+$/)
 
