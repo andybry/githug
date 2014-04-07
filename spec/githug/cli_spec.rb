@@ -91,6 +91,7 @@ describe Githug::CLI do
         level.should_receive(:full_description)
         profile = mock
         Githug::Profile.stub(:load).and_return(profile)
+        profile.should_receive(:folder).and_return(nil)
         profile.should_receive(:set_level).with("add")
         Githug::Level.should_receive(:load).with("add").and_return(level)
         Githug::UI.should_receive(:word_box).with("Githug")
@@ -101,6 +102,9 @@ describe Githug::CLI do
       it "resets the level with a path" do
         level.should_receive(:setup_level)
         level.should_receive(:full_description)
+        profile = mock
+        Githug::Profile.stub(:load).and_return(profile)
+        profile.should_receive(:folder).and_return(nil)
         Githug::UI.should_receive(:word_box).with("Githug")
         Githug::UI.should_receive(:puts).with("resetting level")
         subject.reset("/foo/bar/level.rb")
@@ -116,6 +120,17 @@ describe Githug::CLI do
       Githug::UI.should_receive(:puts).with(["#1: commit", "#2: add"])
       subject.levels
     end
+  end
+
+  describe "#folder" do
+
+    it "sets the folder setting on the profile" do
+      profile = double("profile")
+      profile.should_receive(:folder=).with("/path/to/levels")
+      Githug::Profile.should_receive(:load).and_return(profile)
+      subject.folder("/path/to/levels")
+    end
+
   end
 
 end

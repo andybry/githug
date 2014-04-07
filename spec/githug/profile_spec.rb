@@ -4,7 +4,7 @@ describe Githug::Profile do
 
   describe ".load" do
     it "loads the profile" do
-      settings = {:level => 1, :current_attempts => 0, :current_hint_index => 0, :current_levels => [], :completed_levels => []}
+      settings = {:folder => nil, :level => 1, :current_attempts => 0, :current_hint_index => 0, :current_levels => [], :completed_levels => []}
       File.should_receive(:exists?).with(Githug::Profile::PROFILE_FILE).and_return(true)
       File.should_receive(:open).with(Githug::Profile::PROFILE_FILE).and_return("settings")
       YAML.should_receive(:load).with("settings").and_return(settings)
@@ -13,7 +13,7 @@ describe Githug::Profile do
     end
 
     it "loads the defaults if the file does not exist" do
-      defaults = {:level => nil, :current_attempts => 0, :current_hint_index => 0, :current_levels => [], :completed_levels => []}
+      defaults = {:folder => nil, :level => nil, :current_attempts => 0, :current_hint_index => 0, :current_levels => [], :completed_levels => []}
       File.should_receive(:exists?).with(Githug::Profile::PROFILE_FILE).and_return(false)
       Githug::Profile.should_receive(:new).with(defaults)
       Githug::Profile.load
@@ -84,6 +84,34 @@ describe Githug::Profile do
 
     end
 
+    describe "#folder=" do
+
+      context("when folder is not 'default'") do
+        it "sets the folder and sets the current level to the first one in the config file" do
+          config_file = double("config_file")
+          config_file.should_receive(:readlines).and_return(%W(level1\n level2\n level3\n))
+          File.should_receive(:new).with("/path/to/level_folder/config").and_return(config_file)
+          profile.should_receive(:set_level).with(nil)
+          profile.folder = "/path/to/level_folder"
+          profile.settings[:folder].should eql("/path/to/level_folder")
+          profile.settings[:current_levels].should eql(%W(level1 level2 level3))
+          profile.settings[:completed_levels] = []
+        end
+      end
+
+      context("when folder is not 'default'") do
+        it "sets the folder to nil and the current level to 'LEVELS[0]'" do
+          profile.should_receive(:set_level).with(Githug::Level::LEVELS[0])
+          profile.folder = "default"
+          profile.settings[:folder].should eql(nil)
+          profile.settings[:current_levels].should eql(Githug::Level::LEVELS)
+          profile.settings[:completed_levels] = []
+        end
+      end
+
+    end
+
   end
+
 
 end

@@ -55,6 +55,14 @@ module Githug
       UI.puts(list_with_numbers)
     end
 
+    desc :folder, "Set the folder from which the levels are loaded. Use 'default' go back to initial configuration"
+
+    def folder(path)
+      profile = Profile.load
+      profile.folder = path
+    end
+
+
     no_tasks do
 
       def load_level(path = nil)

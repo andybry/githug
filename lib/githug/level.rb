@@ -18,7 +18,13 @@ module Githug
     class << self
 
       def load(level_name)
-        path = "#{File.dirname(__FILE__)}/../../levels/#{level_name}.rb"
+        profile = Profile.load
+        folder = profile.folder
+        path = if(folder)
+          "#{folder}/#{level_name}.rb"
+        else
+          "#{File.dirname(__FILE__)}/../../levels/#{level_name}.rb"
+        end
         setup(path)
       end
 
@@ -27,7 +33,21 @@ module Githug
       end
 
       def list
-        return LEVELS - [nil]
+        return levels - [nil]
+      end
+
+      def levels
+        profile = Profile.load
+        folder = profile.folder
+        if(folder)
+          config_filename = "#{folder}/config"
+          config_file = File.new(config_filename)
+          level_names = config_file.readlines
+          level_names_chomped = level_names.map {|level_name| level_name.chomp}
+          level_names_chomped.unshift(nil)
+        else
+          LEVELS
+        end
       end
 
       def setup(path)
@@ -38,7 +58,7 @@ module Githug
 
         level.instance_eval(File.read(path))
         level.level_name = File.basename(path, File.extname(path))
-        level.level_no = LEVELS.index(level.level_name) || 1
+        level.level_no = levels.index(level.level_name) || 1
         level.level_path = level_path
         level
       end

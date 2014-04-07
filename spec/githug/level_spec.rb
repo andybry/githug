@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'grit'
+require 'fileutils'
 
 describe Githug::Level do
 
@@ -18,11 +19,27 @@ describe Githug::Level do
 
   describe ".load" do
 
-    it "loads the level" do
-      File.stub(:dirname).and_return("")
-      Githug::Level.should_receive(:setup).with("/../../levels/init.rb")
-      Githug::Level.load("init")
+    context("when the profile has a folder option") do
+      it "loads the level from the folder" do
+        profile = double("profile")
+        profile.should_receive(:folder).and_return("/path/to/level_folder")
+        Githug::Profile.should_receive(:load).and_return(profile)
+        Githug::Level.should_receive(:setup).with("/path/to/level_folder/init.rb")
+        Githug::Level.load("init")
+      end
     end
+
+    context("when the profile has no folder option") do
+      it "loads the level from the levels folder of the gem" do
+        profile = double("profile")
+        profile.should_receive(:folder).and_return(nil)
+        Githug::Profile.should_receive(:load).and_return(profile)
+        File.stub(:dirname).and_return("")
+        Githug::Level.should_receive(:setup).with("/../../levels/init.rb")
+        Githug::Level.load("init")
+      end
+    end
+
 
     it "returns false if the level does not exist" do
       File.stub(:exists?).and_return(false)
@@ -34,6 +51,35 @@ describe Githug::Level do
   describe ".list" do
     it "lists the levels without nil" do
       Githug::Level.list.should eql(Githug::Level::LEVELS - [nil])
+    end
+  end
+
+  describe ".levels" do
+    let(:profile) { double("profile") }
+    context("when there is a folder option in the profile") do
+      it "retrieves the list of levels from the config file in that folder" do
+        profile = double("profile")
+        profile.should_receive(:folder).and_return("/path/to/level_folder")
+        Githug::Profile.should_receive(:load).and_return(profile)
+        config_file = double("config_file")
+        config_file.should_receive(:readlines).and_return(%W(level1\n level2\n level3\n))
+        File.should_receive(:new).with("/path/to/level_folder/config").and_return(config_file)
+        Githug::Level.levels.should eq([
+          nil,
+          "level1",
+          "level2",
+          "level3"
+        ])
+      end
+    end
+
+    context("when there is no folder option in the profile") do
+      it "retrieves the list of levels from the LEVELS constant" do
+        profile = double("profile")
+        profile.should_receive(:folder).and_return(nil)
+        Githug::Profile.should_receive(:load).and_return(profile)
+        Githug::Level.levels.should be(Githug::Level::LEVELS)
+      end
     end
   end
 
@@ -122,6 +168,7 @@ describe Githug::Level do
     let(:profile) { mock.as_null_object }
 
     before(:each) do
+      profile.stub(:folder).and_return(nil)
       profile.stub(:current_hint_index).and_return(0,0,1,0)
       Githug::Profile.stub(:load).and_return(profile)
     end

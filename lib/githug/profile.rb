@@ -19,6 +19,7 @@ module Githug
 
       def defaults
         {
+          :folder => nil,
           :level => nil,
           :current_attempts => 0,
           :current_hint_index => 0,
@@ -61,10 +62,28 @@ module Githug
       set_level(next_level)
     end
 
+    def folder=(path)
+      if(path == "default")
+        settings[:folder] = nil
+        settings[:current_levels] = Level::LEVELS
+        settings[:completed_levels] = []
+        set_level(Level::LEVELS[0])
+      else
+        settings[:folder] = path
+        config_filename = "#{path}/config"
+        config_file = File.new(config_filename)
+        level_names = config_file.readlines
+        level_names_chomped = level_names.map {|level_name| level_name.chomp }
+        settings[:current_levels] = level_names_chomped
+        settings[:completed_levels] = []
+        set_level(nil)
+      end
+    end
+
     private
 
     def levels
-      Level::LEVELS
+      Level.levels
     end
 
     def next_level
